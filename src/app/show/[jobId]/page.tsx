@@ -1,6 +1,7 @@
-import {JobModel} from "@/models/Job";
+import { JobModel, Job } from "@/models/Job";
 import mongoose from "mongoose";
 import Image from "next/image";
+import { notFound } from "next/navigation";
 
 type PageProps = {
   params: {
@@ -8,10 +9,23 @@ type PageProps = {
   };
 };
 
-export default async function SingleJobPage(props:PageProps) {
-  const jobId = props.params.jobId;
-  await mongoose.connect(process.env.MONGO_URI as string);
-  const jobDoc = await JobModel.findById(jobId);
+export default async function SingleJobPage(props: PageProps) {
+  const { jobId } = props.params;
+
+  
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(process.env.MONGO_URI as string);
+  }
+
+  // Find the job document by ID
+  const jobDoc = await JobModel.findById(jobId).lean();
+
+  // Handle the case where no job is found
+  if (!jobDoc) {
+    return notFound(); // This will render the 404 page
+  }
+
+  // Use optional chaining for fields that might be undefined
   return (
     <div className="container mt-8 my-6">
       <div className="sm:flex">
@@ -20,36 +34,43 @@ export default async function SingleJobPage(props:PageProps) {
           <div className="capitalize text-sm text-blue-800 mb-4">
             {jobDoc.remote}
             {' '}&middot;{' '}
-            {jobDoc.city}, {jobDoc.country}
-            {' '}&middot;{' '}
             {jobDoc.type}-time
+            {jobDoc.salary && (
+              <> {' '}&middot;{' '}${jobDoc.salary}k/year</>
+            )}
+            {jobDoc.experience && (
+              <> {' '}&middot;{' '} {jobDoc.experience} years experience</>
+            )}
           </div>
         </div>
         <div>
-          <Image
-            src={jobDoc?.jobIcon} alt={'job icon'}
-            width={500} height={500}
-            className="w-auto h-auto max-w-16 max-h-16"
-          />
+          {/* Optional chaining to handle jobIcon potentially being undefined */}
+          {jobDoc.jobIcon && (
+            <Image
+              src={jobDoc.jobIcon} alt="Job icon"
+              width={500} height={500}
+              className="w-auto h-auto max-w-16 max-h-16"
+            />
+          )}
         </div>
       </div>
       <div className="whitespace-pre-line text-sm text-gray-600">
         {jobDoc.description}
       </div>
       <div className="mt-4 bg-gray-200 p-8 rounded-lg">
-        <h3 className="font-bold mb-2">Apply by contacting us</h3>
-        <div className="flex gap-4">
-          <Image
-            src={jobDoc.contactPhoto}
-            alt={'contact person'}
-            width={500} height={500}
-            className="w-auto h-auto max-w-24 max-h-24"
-          />
-          <div className="flex content-center items-center">
-            {jobDoc.contactName}<br />
-            Email: {jobDoc.contactEmail}<br />
-            Phone: {jobDoc.contactPhone}
-          </div>
+        <h3 className="font-bold mb-2">Apply Here</h3>
+        <div className="flex flex-col">
+          {/* Ensure that the job URL exists */}
+          {jobDoc.jobUrl && (
+            <a
+              href={jobDoc.jobUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-500 underline"
+            >
+              {jobDoc.jobUrl}
+            </a>
+          )}
         </div>
       </div>
     </div>

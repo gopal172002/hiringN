@@ -2,16 +2,16 @@ import { authkitMiddleware } from '@workos-inc/authkit-nextjs';
 
 export default authkitMiddleware();
 
-// Match against pages that require authentication
-// Leave this out if you want authentication on every page in your application
+
 export const config = {
   matcher: [
-    '/',
-    '/new-listing',
-    '/new-listing/:orgId*',
-    '/new-company',
-    '/jobs/:orgId*',
-    '/jobs/edit/:jobId*',
-    '/show/:jobId*',
-  ]
+    '/',  // Home page
+    '/new-listing',  // New listing page
+    '/new-listing/:orgId*',  // Dynamic orgId
+    '/new-company',  // New company page
+    '/jobs/:orgId*',  // Dynamic orgId for jobs
+    '/jobs/edit/:jobId*',  // Edit job page
+    '/show/:jobId*',  // Show job page
+    '/your-other-paths',  // Add any other paths you need
+  ],
 };

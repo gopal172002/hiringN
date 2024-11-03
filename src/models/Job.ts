@@ -1,71 +1,75 @@
-import {AutoPaginatable, OrganizationMembership, User, WorkOS} from "@workos-inc/node";
-import mongoose, {model, models, Schema} from 'mongoose';
+import { AutoPaginatable, OrganizationMembership, User, WorkOS } from "@workos-inc/node";
+import mongoose, { model, models, Schema, Document, Model } from 'mongoose';
 
-export type Job = {
-  _id: string;
+// Define the Job type
+export interface Job extends Document {
   title: string;
   description: string;
   orgName?: string;
   remote: string;
   type: string;
   salary: number;
-  country: string;
-  state: string;
-  city: string;
-  countryId: string;
-  stateId: string;
-  cityId: string;
   jobIcon: string;
-  contactPhoto: string;
-  contactName: string;
-  contactPhone: string;
-  contactEmail: string;
+  jobUrl: string;
   orgId: string;
   createdAt: string;
   updatedAt: string;
   isAdmin?: boolean;
-};
+  experience?: number;
+  expectedSalary?: string;
+}
 
-const JobSchema = new Schema({
-  title: {type: String, required: true},
-  description: {type: String, required: true},
-  remote: {type: String, required: true},
-  type: {type: String, required: true},
-  salary: {type: Number, required: true},
-  country: {type: String, required: true},
-  state: {type: String, required: true},
-  city: {type: String, required: true},
-  countryId: {type: String, required: true},
-  stateId: {type: String, required: true},
-  cityId: {type: String, required: true},
-  jobIcon: {type: String},
-  contactPhoto: {type: String},
-  contactName: {type: String, required: true},
-  contactPhone: {type: String, required: true},
-  contactEmail: {type: String, required: true},
-  orgId: {type: String, required: true},
-}, {
-  timestamps: true,
-});
+// Define the schema
+const JobSchema = new Schema<Job>(
+  {
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    remote: { type: String, required: true },
+    type: { type: String, required: true },
+    salary: { type: Number, required: true },
+    jobIcon: { type: String },
+    jobUrl: { type: String, required: true },
+    orgId: { type: String, required: true },
+    experience: { type: Number },
+    expectedSalary: { type: String },
+  },
+  {
+    timestamps: true,
+  }
+);
 
-export async function addOrgAndUserData(jobsDocs:Job[], user:User|null) {
+// Function to add org and user data to job documents
+export async function addOrgAndUserData(
+  jobsDocs: Job[],
+  user: User | null
+): Promise<Job[]> {
   jobsDocs = JSON.parse(JSON.stringify(jobsDocs));
-  await mongoose.connect(process.env.MONGO_URI as string);
-  const workos = new WorkOS(process.env.WORKOS_API_KEY);
-  let oms:AutoPaginatable<OrganizationMembership>|null = null;
+
+  // Ensure mongoose is connected
+  if (mongoose.connection.readyState === 0) {
+    await mongoose.connect(process.env.MONGO_URI as string);
+  }
+
+  const workos = new WorkOS(process.env.WORKOS_API_KEY as string);
+  let oms: AutoPaginatable<OrganizationMembership> | null = null;
+
   if (user) {
     oms = await workos.userManagement.listOrganizationMemberships({
-      userId: user?.id,
+      userId: user.id,
     });
   }
+
   for (const job of jobsDocs) {
     const org = await workos.organizations.getOrganization(job.orgId);
     job.orgName = org.name;
+
     if (oms && oms.data.length > 0) {
-      job.isAdmin = !!oms.data.find(om => om.organizationId === job.orgId);
+      job.isAdmin = !!oms.data.find((om) => om.organizationId === job.orgId);
     }
   }
+
   return jobsDocs;
 }
 
-export const JobModel = models?.Job || model('Job', JobSchema);
+// Export the Job model with correct typing
+export const JobModel: Model<Job> = models.Job || model<Job>('Job', JobSchema);

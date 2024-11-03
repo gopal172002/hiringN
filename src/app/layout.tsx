@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import '@radix-ui/themes/styles.css';
+import { FaInstagram, FaLinkedin, FaTelegram, FaWhatsapp } from "react-icons/fa";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,8 +22,37 @@ export default function RootLayout({
       <body className={inter.className}>
         <Header />
         {children}
-        <footer className="container py-8 text-gray-500">
-          Job Board &copy; 2024 - All rights reserved
+        <footer className="bg-gray-100 border-t border-gray-200 py-6 mt-12">
+          <div className="container mx-auto text-center text-sm text-gray-600">
+            <p className="mb-4">
+              Job Board &copy; {new Date().getFullYear()} - All rights reserved
+            </p>
+            <div className="flex justify-center space-x-6 mb-4">
+              <a href="https://www.instagram.com" target="_blank" className="hover:text-gray-800" rel="noopener noreferrer">
+                <FaInstagram size={24} />
+              </a>
+              <a href="https://www.linkedin.com" target="_blank" className="hover:text-gray-800" rel="noopener noreferrer">
+                <FaLinkedin size={24} />
+              </a>
+              <a href="https://www.telegram.org" target="_blank" className="hover:text-gray-800" rel="noopener noreferrer">
+                <FaTelegram size={24} />
+              </a>
+              <a href="https://www.whatsapp.com" target="_blank" className="hover:text-gray-800" rel="noopener noreferrer">
+                <FaWhatsapp size={24} />
+              </a>
+            </div>
+            <div className="flex justify-center space-x-6">
+              <a href="/privacy" className="hover:text-gray-800">
+                Privacy Policy
+              </a>
+              <a href="/terms" className="hover:text-gray-800">
+                Terms of Service
+              </a>
+              <a href="/contact" className="hover:text-gray-800">
+                Contact Us
+              </a>
+            </div>
+          </div>
         </footer>
       </body>
     </html>
