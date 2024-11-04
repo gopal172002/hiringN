@@ -12,30 +12,27 @@ export const metadata: Metadata = {
   description: "HiringNexus",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
+interface RootLayoutProps {
   children: React.ReactNode;
-}>) {
+}
+
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <head>
         <title>HiringNexus</title>
         <link rel="icon" href="/assets/hiringnexus.png" />
         
-       
         <meta name="description" content="HiringNexus: Your gateway to innovative hiring solutions." />
         <meta name="keywords" content="hiring, recruitment, employment, jobs, HiringNexus" />
         <meta name="author" content="HiringNexus Team" />
         
-       
         <meta property="og:title" content="HiringNexus" />
         <meta property="og:description" content="HiringNexus: Your gateway to innovative hiring solutions." />
         <meta property="og:image" content="/assets/hiringnexus.png" />
         <meta property="og:url" content="https://yourwebsite.com" />
         <meta property="og:type" content="website" />
         
-     
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="HiringNexus" />
         <meta name="twitter:description" content="HiringNexus: Your gateway to innovative hiring solutions." />

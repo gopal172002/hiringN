@@ -40,8 +40,13 @@ export async function POST(req: NextRequest) {
             newFilename,
             url: `https://${bucketName}.s3.amazonaws.com/${newFilename}`,
         });
-    } catch (error) {
-        console.error('Error uploading file to S3:', error);
-        return new Response(JSON.stringify({ message: 'Internal Server Error', error: error.message }), { status: 500 });
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error('Error uploading file to S3:', error);
+            return new Response(JSON.stringify({ message: 'Internal Server Error', error: error.message }), { status: 500 });
+        } else {
+            console.error('Unexpected error:', error);
+            return new Response(JSON.stringify({ message: 'Internal Server Error' }), { status: 500 });
+        }
     }
 }

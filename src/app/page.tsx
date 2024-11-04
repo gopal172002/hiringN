@@ -8,7 +8,7 @@ export default async function Home() {
     const { user } = await getUser(); 
     await mongoose.connect(process.env.MONGO_URI as string); 
     
-    const allJobs: Job[] = await JobModel.find().lean(); 
+    const allJobs = await JobModel.find().lean() as Job[]; 
     
     return (
         <>
