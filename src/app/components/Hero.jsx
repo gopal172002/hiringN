@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import JobRow from "@/app/components/JobRow";
 
@@ -13,60 +13,73 @@ export default function Hero() {
   const [salary, setSalary] = useState('');
   const [jobs, setJobs] = useState([]);
   const [filteredJobs, setFilteredJobs] = useState([]);
-  const [showFilters, setShowFilters] = useState(false); // Control filter visibility on mobile
+  const [showFilters, setShowFilters] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchJobs = async () => {
+      setLoading(true); // Set loading before fetching jobs
       try {
         const response = await axios.get('/api/job/filter');
-        setJobs(response.data);
-        setFilteredJobs(response.data);
+        const sortedJobs = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setJobs(sortedJobs);
+        setFilteredJobs(sortedJobs);
       } catch (error) {
         console.error('Error fetching jobs:', error);
+      } finally {
+        setLoading(false); // Stop loading after fetching jobs
       }
     };
     fetchJobs();
   }, []);
 
-  const applyFilters = async () => {
+  const applyFilters = useCallback(async () => {
+    setLoading(true); // Set loading before applying filters
     try {
-      const filterParams = {
-        type: [],
-        experience: experience ? parseInt(experience.split(' ')[2], 10) : undefined,
-        salary: salary || undefined,
-      };
+      const filterParams = {};
 
-      if (jobType.fullTime) {
-        filterParams.type.push('full');
-      }
-      if (jobType.internship) {
-        filterParams.type.push('intern');
+      // Only include type if either fullTime or internship is selected
+      const selectedTypes = [];
+      if (jobType.fullTime) selectedTypes.push('Full');
+      if (jobType.internship) selectedTypes.push('Intern');
+      if (selectedTypes.length > 0) {
+        filterParams.type = selectedTypes;
       }
 
+      // Include experience if selected
+      if (experience) {
+        filterParams.experience = parseInt(experience.split(' ')[2], 10);
+      }
+
+      // Include salary if selected
+      if (salary) {
+        filterParams.salary = salary;
+      }
+
+      // Make the API call with the filterParams
       const response = await axios.get('/api/job/filter', { params: filterParams });
-      setFilteredJobs(response.data);
+      const sortedFilteredJobs = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      setFilteredJobs(sortedFilteredJobs);
     } catch (error) {
       console.error('Error applying filters:', error);
+    } finally {
+      setLoading(false); // Stop loading after applying filters
     }
-  };
+  }, [jobType, experience, salary]);
 
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     setJobType({ fullTime: false, internship: false });
     setExperience('');
     setSalary('');
     setFilteredJobs(jobs);
-  };
+  }, [jobs]);
 
   const handleJobTypeChange = (type) => {
-    setJobType(prevState => ({ ...prevState, [type]: !prevState[type] }));
+    setJobType((prevState) => ({ ...prevState, [type]: !prevState[type] }));
   };
 
   return (
     <section className="w-full my-8 px-4 lg:px-0">
-      <h1 className="text-3xl lg:text-4xl font-bold text-center mb-8">
-        Find your next<br />dream job
-      </h1>
-
       {/* Mobile Filter Button */}
       <div className="lg:hidden mb-4 text-center">
         <button
@@ -171,12 +184,14 @@ export default function Hero() {
         {/* Job Listings Section - Right */}
         <div className="col-span-9">
           <h2 className="text-2xl font-bold mb-4">Job Openings</h2>
-          {filteredJobs.length > 0 ? (
+          {loading ? (
+            <p>Loading jobs...</p>
+          ) : filteredJobs.length > 0 ? (
             filteredJobs.map((job) => (
               <JobRow key={job._id} jobDoc={job} />
             ))
           ) : (
-            <p>No jobs found matching your criteria.</p>
+            <p>No jobs found.</p>
           )}
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { AutoPaginatable, OrganizationMembership, User, WorkOS } from "@workos-inc/node";
 import mongoose, { model, models, Schema, Document, Model } from 'mongoose';
 
-// Define the Job type
+
 export interface Job extends Document {
   title: string;
   description: string;
@@ -17,9 +17,10 @@ export interface Job extends Document {
   isAdmin?: boolean;
   experience?: number;
   expectedSalary?: string;
+  logoUrl?: string; 
 }
 
-// Define the schema
+
 const JobSchema = new Schema<Job>(
   {
     title: { type: String, required: true },
@@ -32,20 +33,21 @@ const JobSchema = new Schema<Job>(
     orgId: { type: String, required: true },
     experience: { type: Number },
     expectedSalary: { type: String },
+    logoUrl: { type: String }, 
   },
   {
     timestamps: true,
   }
 );
 
-// Function to add org and user data to job documents
+
 export async function addOrgAndUserData(
   jobsDocs: Job[],
   user: User | null
 ): Promise<Job[]> {
   jobsDocs = JSON.parse(JSON.stringify(jobsDocs));
 
-  // Ensure mongoose is connected
+ 
   if (mongoose.connection.readyState === 0) {
     await mongoose.connect(process.env.MONGO_URI as string);
   }
@@ -59,17 +61,26 @@ export async function addOrgAndUserData(
     });
   }
 
-  for (const job of jobsDocs) {
-    const org = await workos.organizations.getOrganization(job.orgId);
-    job.orgName = org.name;
+  console.log(user);
+
+
+  const orgIds = jobsDocs.map(job => job.orgId);
+  const orgs = await Promise.all(orgIds.map(orgId => workos.organizations.getOrganization(orgId)));
+
+  const orgMap = new Map(orgs.map(org => [org.id, org.name]));
+
+console.log("this is org mpp"+orgMap);
+
+  for (const job of jobsDocs){
+    job.orgName = orgMap.get(job.orgId) || '';
 
     if (oms && oms.data.length > 0) {
-      job.isAdmin = !!oms.data.find((om) => om.organizationId === job.orgId);
+      job.isAdmin = oms.data.some((om) => om.organizationId === job.orgId);
     }
   }
 
   return jobsDocs;
 }
 
-// Export the Job model with correct typing
+
 export const JobModel: Model<Job> = models.Job || model<Job>('Job', JobSchema);

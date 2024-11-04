@@ -19,7 +19,7 @@ export default async function SingleJobPage(props: PageProps) {
 
   // Find the job document by ID
   const jobDoc = await JobModel.findById(jobId).lean();
-
+console.log(jobDoc?.jobIcon);
   // Handle the case where no job is found
   if (!jobDoc) {
     return notFound(); // This will render the 404 page
@@ -36,7 +36,7 @@ export default async function SingleJobPage(props: PageProps) {
             {' '}&middot;{' '}
             {jobDoc.type}-time
             {jobDoc.salary && (
-              <> {' '}&middot;{' '}${jobDoc.salary}k/year</>
+              <> {' '}&middot;{' '}{jobDoc.salary}LPA</>
             )}
             {jobDoc.experience && (
               <> {' '}&middot;{' '} {jobDoc.experience} years experience</>
@@ -44,7 +44,6 @@ export default async function SingleJobPage(props: PageProps) {
           </div>
         </div>
         <div>
-          {/* Optional chaining to handle jobIcon potentially being undefined */}
           {jobDoc.jobIcon && (
             <Image
               src={jobDoc.jobIcon} alt="Job icon"

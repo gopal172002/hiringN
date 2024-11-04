@@ -1,11 +1,8 @@
-// pages/api/jobs.ts
-
 import { NextRequest } from 'next/server';
 import mongoose from 'mongoose';
 import { JobModel } from '@/models/Job'; // Adjust the import path if necessary
 
 const MONGO_URI = process.env.MONGO_URI; // Ensure this is set in your .env.local
-console.log("uri", MONGO_URI);
 
 // Connect to the database
 async function connectDB() {
@@ -24,8 +21,8 @@ export async function GET(req: NextRequest) {
 
         // Construct filters based on query parameters
         if (query.has('type')) {
-            const types = query.getAll('type'); // Get all values for type
-            filters.type = { $in: types }; // Filter by type
+            const types = query.getAll('type'); // Get all values for 'type'
+            filters.type = { $in: types.map(type => new RegExp(`^${type}$`, 'i')) }; // Case-insensitive filtering
         }
 
         if (query.has('experience')) {
@@ -33,11 +30,10 @@ export async function GET(req: NextRequest) {
             filters.experience = { $gte: experience }; // Filter by experience
         }
 
-        // Check if salary filter is applied
         if (query.has('salary')) {
             const salary = query.get('salary') as string;
             if (salary === 'Competitive') {
-                filters.salary = { $gte: 10 }; // Example threshold for competitive
+                filters.salary = { $gte: 10 }; // Example threshold for competitive salary
             } else {
                 const [min, max] = salary.split('-').map(sal => {
                     if (sal.includes('+')) return Infinity; // Handle salary ranges with +
